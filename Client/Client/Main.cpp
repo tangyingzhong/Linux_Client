@@ -1,20 +1,17 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <string.h>
+#include <iostream>
+#include <fstream>
+#include <mutex>
+#include <thread>
 #include "IClient.h"
 #include "Client.h"
 
-int main(int args,char** argv)
+std::mutex g_mutex;
+
+int StartClient(std::string strServerAddr)
 {
-	std::string strServerAddr = "192.168.1.12";
-
-	if (args > 1)
-	{
-		strServerAddr = argv[1];
-	}
-
-	std::cout << strServerAddr << std::endl;
-
 	IClient*  pClient = new Client();
 
 	if (!pClient->Configure(strServerAddr, 8888))
@@ -52,13 +49,60 @@ int main(int args,char** argv)
 		return -1;
 	}
 
-	std::cout << "Rev server's data:" << RevData << std::endl;
+	std::cout << "Receive server's data:" << RevData << std::endl;
+
+	// Write the text to file
+	{
+		std::lock_guard<std::mutex> GlobalLock(g_mutex);
+
+		std::fstream fStreamer;
+
+		fStreamer.open("data.txt", std::ios::out);
+
+		fStreamer << RevData<<std::endl;
+
+		fStreamer.write(RevData, strlen(RevData)+1);
+
+		fStreamer.close();
+	}
 
 	pClient->Stop();
 
 	delete pClient;
 
 	pClient = nullptr;
+
+	return 0;
+}
+
+int main(int args,char** argv)
+{
+	std::string strServerAddr = "192.168.1.12";
+
+	if (args > 1)
+	{
+		strServerAddr = argv[1];
+	}
+
+	/*int iRet = StartClient(strServerAddr);
+
+	return iRet;*/
+
+	std::thread t[10000];
+
+	for (int index = 0; index < 10000; ++index)
+	{
+		t[index] = std::thread([=, &strServerAddr]()->int {
+			int iRet = StartClient(strServerAddr);
+
+			return iRet;
+		});
+	}
+
+	for (int index = 0; index < 10000; ++index)
+	{
+		t[index].join();
+	}
 
 	return 0;
 }

@@ -96,33 +96,37 @@ bool Client::Start()
 }
 
 // Send the data to server
-bool Client::Send(const char* pData, int iSendSize)
+bool Client::Send(const char* pData,int iSendSize)
 {
-	if (pData==nullptr)
+	if (pData == nullptr)
 	{
 		SetErrorText("Data to be sent is null !");
 
 		return false;
 	}
 
-	if (iSendSize<=0)
+	if (iSendSize <= 0)
 	{
 		SetErrorText("Inalid data size !");
 
 		return false;
 	}
 
-	if (GetSocket()==0)
+	if (GetSocket() == 0)
 	{
 		SetErrorText("Inalid client !");
 
 		return false;
 	}
 
-	ssize_t lWrittenSize=write(GetSocket(), pData, static_cast<size_t>(iSendSize));
-	if (lWrittenSize ==-1)
+	size_t lTotalSize = static_cast<size_t>(iSendSize);
+
+	ssize_t lWrittenSize = write(GetSocket(), pData, lTotalSize);
+	if (lWrittenSize == -1)
 	{
-		SetErrorText("Failed to send the data !");
+		char* pErrorMsg = strerror(errno);
+
+		SetErrorText(pErrorMsg);
 
 		return false;
 	}
@@ -131,7 +135,7 @@ bool Client::Send(const char* pData, int iSendSize)
 }
 
 // Receive data from the server
-bool Client::Receive(char* pData, int iRevSize)
+bool Client::Receive(char* pData,int iRevSize)
 {
 	if (pData == nullptr)
 	{
@@ -154,10 +158,14 @@ bool Client::Receive(char* pData, int iRevSize)
 		return false;
 	}
 
-	ssize_t lReadSize = read(GetSocket(), pData, static_cast<size_t>(iRevSize));
-	if (lReadSize ==-1)
+	size_t lTotalSize = static_cast<size_t>(iRevSize);
+
+	ssize_t lReadSize = read(GetSocket(), pData, lTotalSize);
+	if (lReadSize < 0)
 	{
-		SetErrorText("Failed to receive the data !");
+		char* pErrorMsg = strerror(errno);
+
+		SetErrorText(pErrorMsg);
 
 		return false;
 	}

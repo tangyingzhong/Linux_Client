@@ -27,10 +27,10 @@ public:
 	virtual bool Start() = 0;
 
 	// Send the data to server
-	virtual bool Send(const char* pData,int iSendSize) = 0;
+	virtual bool Send(const char* pData,int iSendSize)=0;
 
 	// Receive data from the server
-	virtual bool Receive(char* pData,int iRevSize) = 0;
+	virtual bool Receive(char* pData,int iRevSize)=0;
 
 	// Stop the client
 	virtual bool Stop() = 0;
