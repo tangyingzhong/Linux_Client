@@ -86,6 +86,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ProjectPublicIncludePath>$(ProjectDir);$(ProjectPublicIncludePath)</ProjectPublicIncludePath>
+    <IntDir>$(ProjectDir)bin\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
