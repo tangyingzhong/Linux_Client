@@ -5,6 +5,7 @@
 #include <fstream>
 #include <mutex>
 #include <thread>
+#include <wait.h>
 #include "IClient.h"
 #include "Client.h"
 
@@ -18,6 +19,12 @@ int StartClient(std::string strServerAddr)
 	{
 		std::cout << pClient->GetErrorMsg() << std::endl;
 
+		pClient->Stop();
+
+		delete pClient;
+
+		pClient = nullptr;
+
 		return -1;
 	}
 
@@ -25,6 +32,12 @@ int StartClient(std::string strServerAddr)
 	if (!pClient->Start())
 	{
 		std::cout << pClient->GetErrorMsg() << std::endl;
+
+		pClient->Stop();
+
+		delete pClient;
+
+		pClient = nullptr;
 
 		return -1;
 	}
@@ -36,6 +49,12 @@ int StartClient(std::string strServerAddr)
 	{
 		std::cout << pClient->GetErrorMsg() << std::endl;
 
+		pClient->Stop();
+
+		delete pClient;
+
+		pClient = nullptr;
+
 		return -1;
 	}
 
@@ -46,25 +65,31 @@ int StartClient(std::string strServerAddr)
 	{
 		std::cout << pClient->GetErrorMsg() << std::endl;
 
+		pClient->Stop();
+
+		delete pClient;
+
+		pClient = nullptr;
+
 		return -1;
 	}
 
 	std::cout << "Receive server's data:" << RevData << std::endl;
 
-	// Write the text to file
-	{
-		std::lock_guard<std::mutex> GlobalLock(g_mutex);
+	//// Write the text to file
+	//{
+	//	std::lock_guard<std::mutex> GlobalLock(g_mutex);
 
-		std::fstream fStreamer;
+	//	std::fstream fStreamer;
 
-		fStreamer.open("data.txt", std::ios::out);
+	//	fStreamer.open("data.txt", std::ios::out);
 
-		fStreamer << RevData<<std::endl;
+	//	fStreamer << RevData<<std::endl;
 
-		fStreamer.write(RevData, strlen(RevData)+1);
+	//	fStreamer.write(RevData, strlen(RevData)+1);
 
-		fStreamer.close();
-	}
+	//	fStreamer.close();
+	//}
 
 	pClient->Stop();
 
@@ -88,9 +113,9 @@ int main(int args,char** argv)
 
 	return iRet;*/
 
-	std::thread t[10000];
+	/*std::thread t[500000];
 
-	for (int index = 0; index < 10000; ++index)
+	for (int index = 0; index < 500000; ++index)
 	{
 		t[index] = std::thread([=, &strServerAddr]()->int {
 			int iRet = StartClient(strServerAddr);
@@ -99,9 +124,25 @@ int main(int args,char** argv)
 		});
 	}
 
-	for (int index = 0; index < 10000; ++index)
+	for (int index = 0; index < 500000; ++index)
 	{
 		t[index].join();
+	}*/
+
+	int iProcNum = 500000;
+
+	while (iProcNum--)
+	{
+		int iStatus = -1;
+
+		if (fork() == 0)
+		{
+			int iRet = StartClient(strServerAddr);
+
+			return iRet;
+		}
+
+		wait(&iStatus);
 	}
 
 	return 0;
