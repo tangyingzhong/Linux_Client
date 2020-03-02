@@ -129,11 +129,13 @@ int main(int args, char** argv)
 		t[index].join();
 	}*/
 
-	const int TOTAL_PROCESS = 500000;
+	const int TOTAL_PROCESS = 60000;
 
 	int iProcNum = TOTAL_PROCESS;
 
-	int iCurCount = 0;
+	int iSuccessCount = 0;
+
+	int iFailedCount = 0;
 
 	while (iProcNum--)
 	{
@@ -146,16 +148,24 @@ int main(int args, char** argv)
 		}
 		else if (iPid > 0)
 		{
-			++iCurCount;
+			++iSuccessCount;
+		}
+		else
+		{
+			++iFailedCount;
+
+			std::cout << strerror(errno) << std::endl;
 		}
 	}
 
-	std::cout << "Fork process number is :" << iCurCount << std::endl;
-
-	for (int index = 0; index < iCurCount; ++index)
+	for (int index = 0; index < iSuccessCount; ++index)
 	{
 		wait(NULL);
 	}
+
+	std::cout << "Suceessfully fork process number is :" << iSuccessCount << std::endl;
+
+	std::cout << "Failed to fork process number is :" << iFailedCount << std::endl;
 
 	std::cout << "Finish all processes" << std::endl;
 
