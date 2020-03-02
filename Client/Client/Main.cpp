@@ -100,7 +100,7 @@ int StartClient(std::string strServerAddr)
 	return 0;
 }
 
-int main(int args,char** argv)
+int main(int args, char** argv)
 {
 	std::string strServerAddr = "192.168.1.12";
 
@@ -129,22 +129,35 @@ int main(int args,char** argv)
 		t[index].join();
 	}*/
 
-	int iProcNum = 500000;
+	const int TOTAL_PROCESS = 500000;
+
+	int iProcNum = TOTAL_PROCESS;
+
+	int iCurCount = 0;
 
 	while (iProcNum--)
 	{
-		int iStatus = -1;
-
-		if (fork() == 0)
+		pid_t iPid = fork();
+		if (iPid == 0)
 		{
 			int iRet = StartClient(strServerAddr);
 
 			return iRet;
 		}
-
-		wait(&iStatus);
+		else if (iPid > 0)
+		{
+			++iCurCount;
+		}
 	}
+
+	std::cout << "Fork process number is :" << iCurCount << std::endl;
+
+	for (int index = 0; index < iCurCount; ++index)
+	{
+		wait(NULL);
+	}
+
+	std::cout << "Finish all processes" << std::endl;
 
 	return 0;
 }
-
