@@ -122,16 +122,24 @@ bool Client::Send(const char* pData,int iSendSize)
 	size_t lTotalSize = static_cast<size_t>(iSendSize);
 
 	ssize_t lWrittenSize = write(GetSocket(), pData, lTotalSize);
-	if (lWrittenSize == -1)
+	if (lWrittenSize <0)
 	{
 		if (errno == EAGAIN)
 		{
 			return true;
 		}
 
+		close(GetSocket());
+
 		char* pErrorMsg = strerror(errno);
 
 		SetErrorText(pErrorMsg);
+
+		return false;
+	}
+	else if (lWrittenSize == 0)
+	{
+		close(GetSocket());
 
 		return false;
 	}
@@ -173,9 +181,17 @@ bool Client::Receive(char* pData,int iRevSize)
 			return true;
 		}
 
+		close(GetSocket());
+
 		char* pErrorMsg = strerror(errno);
 
 		SetErrorText(pErrorMsg);
+
+		return false;
+	}
+	else if(lReadSize==0)
+	{
+		close(GetSocket());
 
 		return false;
 	}

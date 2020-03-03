@@ -129,7 +129,7 @@ int main(int args, char** argv)
 		t[index].join();
 	}*/
 
-	const int TOTAL_PROCESS = 60000;
+	const int TOTAL_PROCESS = 94756;
 
 	int iProcNum = TOTAL_PROCESS;
 
