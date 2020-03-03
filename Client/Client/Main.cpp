@@ -9,7 +9,7 @@
 #include "IClient.h"
 #include "Client.h"
 
-int StartClient(std::string strServerAddr)
+int StartClient(std::string strServerAddr, std::string& strTempData,bool bIsHasRecv)
 {
 	IClient*  pClient = new Client();
 
@@ -41,9 +41,9 @@ int StartClient(std::string strServerAddr)
 	}
 
 	// Send something to the server
-	std::string TempData = "Hello,server,how are you?";
+	//std::string TempData = "Hello,server,how are you?";
 
-	if (!pClient->Send(TempData.c_str(), static_cast<int>(TempData.length())))
+	if (!pClient->Send(strTempData.c_str(), static_cast<int>(strTempData.length())))
 	{
 		std::cout << pClient->GetErrorMsg() << std::endl;
 
@@ -56,23 +56,26 @@ int StartClient(std::string strServerAddr)
 		return -1;
 	}
 
-	// Get info from the server
-	char RevData[500] = { 0 };
-
-	if (!pClient->Receive(RevData, 500))
+	if (bIsHasRecv)
 	{
-		std::cout << pClient->GetErrorMsg() << std::endl;
+		// Get info from the server
+		char RevData[500] = { 0 };
 
-		pClient->Stop();
+		if (!pClient->Receive(RevData, 500))
+		{
+			std::cout << pClient->GetErrorMsg() << std::endl;
 
-		delete pClient;
+			pClient->Stop();
 
-		pClient = nullptr;
+			delete pClient;
 
-		return -1;
+			pClient = nullptr;
+
+			return -1;
+		}
+
+		std::cout << "Read from server: <<" << RevData << std::endl;
 	}
-
-	std::cout << "Read from server: <<" <<RevData << std::endl;
 
 	pClient->Stop();
 
@@ -127,9 +130,11 @@ int main(int args, char** argv)
 		pid_t iPid = fork();
 		if (iPid == 0)
 		{
-			int iRet = StartClient(strServerAddr);
+			std::string strTempData= "Hello,server,how are you?";
 
-			return iRet;
+			StartClient(strServerAddr, strTempData,true);
+
+			exit(0);
 		}
 		else if (iPid > 0)
 		{
@@ -147,6 +152,14 @@ int main(int args, char** argv)
 	{
 		wait(NULL);
 	}
+
+	std::cout << "Start do last time connection"  << std::endl;
+
+	std::string strTempData = "Exit";
+
+	StartClient(strServerAddr, strTempData,false);
+
+	std::cout << "End do last time connection" << std::endl;
 
 	std::cout << "Suceessfully fork process number is :" << iSuccessProcCount << std::endl;
 
