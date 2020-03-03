@@ -9,8 +9,6 @@
 #include "IClient.h"
 #include "Client.h"
 
-std::mutex g_mutex;
-
 int StartClient(std::string strServerAddr)
 {
 	IClient*  pClient = new Client();
@@ -43,7 +41,7 @@ int StartClient(std::string strServerAddr)
 	}
 
 	// Send something to the server
-	std::string TempData = "Hello,server, i am fine !";
+	std::string TempData = "Hello,server,how are you?";
 
 	if (!pClient->Send(TempData.c_str(), static_cast<int>(TempData.length())))
 	{
@@ -74,22 +72,7 @@ int StartClient(std::string strServerAddr)
 		return -1;
 	}
 
-	std::cout << "Receive server's data:" << RevData << std::endl;
-
-	//// Write the text to file
-	//{
-	//	std::lock_guard<std::mutex> GlobalLock(g_mutex);
-
-	//	std::fstream fStreamer;
-
-	//	fStreamer.open("data.txt", std::ios::out);
-
-	//	fStreamer << RevData<<std::endl;
-
-	//	fStreamer.write(RevData, strlen(RevData)+1);
-
-	//	fStreamer.close();
-	//}
+	std::cout << "Read from server: <<" <<RevData << std::endl;
 
 	pClient->Stop();
 
