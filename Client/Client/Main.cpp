@@ -135,9 +135,9 @@ int main(int args, char** argv)
 
 	int iProcNum = std::stoi(strParallelNum);
 
-	int iSuccessCount = 0;
+	int iSuccessProcCount = 0;
 
-	int iFailedCount = 0;
+	int iFailedProcCount = 0;
 
 	while (iProcNum--)
 	{
@@ -150,24 +150,24 @@ int main(int args, char** argv)
 		}
 		else if (iPid > 0)
 		{
-			++iSuccessCount;
+			++iSuccessProcCount;
 		}
 		else
 		{
-			++iFailedCount;
+			++iFailedProcCount;
 
 			std::cout << strerror(errno) << std::endl;
 		}
 	}
 
-	for (int index = 0; index < iSuccessCount; ++index)
+	for (int index = 0; index < iSuccessProcCount; ++index)
 	{
 		wait(NULL);
 	}
 
-	std::cout << "Suceessfully fork process number is :" << iSuccessCount << std::endl;
+	std::cout << "Suceessfully fork process number is :" << iSuccessProcCount << std::endl;
 
-	std::cout << "Failed to fork process number is :" << iFailedCount << std::endl;
+	std::cout << "Failed to fork process number is :" << iFailedProcCount << std::endl;
 
 	std::cout << "Finish all processes" << std::endl;
 

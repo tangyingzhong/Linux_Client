@@ -85,7 +85,9 @@ bool Client::Start()
 	int iRet = connect(GetSocket(), (struct sockaddr*)&ServerAddr, sizeof(ServerAddr));
 	if (iRet<0)
 	{
-		char* strErrorMsg = strerror(errno);
+		std::string strErrorMsg = strerror(errno);
+
+		strErrorMsg = strErrorMsg + "-->" + std::to_string(m_iSocket);
 
 		SetErrorText(strErrorMsg);
 
