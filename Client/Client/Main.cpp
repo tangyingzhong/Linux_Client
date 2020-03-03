@@ -104,9 +104,13 @@ int main(int args, char** argv)
 {
 	std::string strServerAddr = "192.168.1.12";
 
+	std::string strParallelNum = "90000";
+
 	if (args > 1)
 	{
 		strServerAddr = argv[1];
+
+		strParallelNum = argv[2];
 	}
 
 	/*int iRet = StartClient(strServerAddr);
@@ -129,9 +133,7 @@ int main(int args, char** argv)
 		t[index].join();
 	}*/
 
-	const int TOTAL_PROCESS = 94756;
-
-	int iProcNum = TOTAL_PROCESS;
+	int iProcNum = std::stoi(strParallelNum);
 
 	int iSuccessCount = 0;
 
