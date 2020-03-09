@@ -407,7 +407,18 @@ void InsertFixup(RBTree* pTree,Node* pNode)
 			}
 			else
 			{
+				if (pNode==pNode->pParent->pRight)
+				{
+					pNode = pNode->pParent;
 
+					LeftRotation(pTree, pNode);
+				}
+
+				pNode->pParent->color = BLACK;
+
+				pNode->pParent->pParent->color = RED;
+
+				RightRotation(pTree, pNode->pParent->pParent);
 			}
 		}
 		else
@@ -424,15 +435,35 @@ void InsertFixup(RBTree* pTree,Node* pNode)
 
 				pNode = pNode->pParent->pParent;
 			}
+			else
+			{
+				if (pNode == pNode->pParent->pLeft)
+				{
+					pNode = pNode->pParent;
 
+					RightRotation(pTree, pNode);
+				}
+
+				pNode->pParent->color = BLACK;
+
+				pNode->pParent->pParent->color = RED;
+
+				LeftRotation(pTree, pNode->pParent->pParent);
+			}
 		}
 	}
 
 	pTree->pRoot->color = BLACK;
 }
 
-void Add(RBTree* pTree, Node* pNode)
+void Add(RBTree* pTree, int key,int value)
 {
+	Node* pNode = new Node();
+
+	pNode->key = key;
+
+	pNode->value = value;
+
 	// Insert the node to the tree
 	Insert(pTree, pNode);
 
@@ -502,6 +533,29 @@ void RightRotation(RBTree* pTree, Node* pNode)
 	pNode->pParent = pLeftNode;
 }
 
+void DisplayTree(RBTree* pTree,Node* pNode)
+{
+	if (pTree==nullptr)
+	{
+		return;
+	}
+
+	if (pNode==pTree->pNil)
+	{
+		return;
+	}
+
+	DisplayTree(pTree, pNode->pLeft);
+
+	std::cout << "Key:"
+		<< pNode->key
+		<< " -> Value:"
+		<< pNode->value
+		<< std::endl;
+
+	DisplayTree(pTree, pNode->pRight);
+}
+
 int main()
 {
 	int ArrayTest[] = {1,3,5,7,8,10,12,14,16,18,17,15,13,11,9,6,4,2};
@@ -510,14 +564,30 @@ int main()
 
 	//BubbleSort(ArrayTest, iTotalSize, false);
 
-	QuickSort(ArrayTest, 0, iTotalSize - 1, false);
+	//QuickSort(ArrayTest, 0, iTotalSize - 1, false);
 
-	for (int index=0;index<iTotalSize;++index)
+	/*for (int index = 0; index < iTotalSize; ++index)
 	{
 		std::cout << ArrayTest[index] << " ";
 	}
 
-	std::cout << std::endl;
+	std::cout << std::endl;*/
+
+	RBTree* pTree = nullptr;
+
+	Initialize(pTree);
+
+	Add(pTree, 10, 2);
+
+	Add(pTree, 11, 2);
+
+	Add(pTree, 20, 2);
+
+	Add(pTree, 27, 2);
+
+	Add(pTree, 40, 2);
+
+	
 
 	return 0;
 }
