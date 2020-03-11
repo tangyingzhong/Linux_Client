@@ -70,6 +70,12 @@ public:
 	// Modify the key's data
 	bool Modify(KeyType& key, ValueType& value);
 
+	// Size of the tree
+	int Size();
+
+	// Is empty
+	bool IsEmpty();
+
 	// Get the error message
 	std::string GetErrorMsg();
 
@@ -136,6 +142,12 @@ private:
 	// Enter delete mode3: current node has no any child
 	void EnterDeleteMode3(NodeType*& pRoot, NodeType*& pNode);
 
+	// Left rotation
+	void LeftRotation(NodeType* pNode);
+
+	// Right rotation
+	void RightRotation(NodeType* pNode);
+
 private:
 	// Get the disposed status
 	inline bool GetDisposed() const
@@ -173,9 +185,24 @@ private:
 		m_pRoot = pRoot;
 	}
 
+	// Get the Size
+	inline int GetSize() const
+	{
+		return m_iSize;
+	}
+
+	// Set the Size
+	inline void SetSize(int iSize)
+	{
+		m_iSize = iSize;
+	}
+
 private:
 	// Root node
 	NodeType* m_pRoot;
+	
+	// Tree size
+	int m_iSize;
 	
 	// Error message
 	std::string m_strErrorText;
@@ -190,6 +217,7 @@ private:
 template <class T1, class T2>
 RBTree<T1,T2>::RBTree():
 	m_pRoot(nullptr),
+	m_iSize(0),
 	m_strErrorText(""),
 	m_bDisposed(false)
 {
@@ -243,20 +271,6 @@ void RBTree<T1, T2>::DestoryNode(NodeType* pNode)
 	delete pNode;
 
 	pNode = nullptr;
-}
-
-// Insert fixup
-template <class T1, class T2>
-void RBTree<T1, T2>::InsertFixup(NodeType* pRoot, NodeType* pCurNode)
-{
-
-}
-
-// Remove fixup
-template <class T1, class T2>
-void RBTree<T1, T2>::RemoveFixup(NodeType* pRoot, NodeType* pCurNode)
-{
-
 }
 
 // Get min node
@@ -335,11 +349,230 @@ RBTree<T1, T2>::NodeType* RBTree<T1, T2>::CreateNode(KeyType& key,
 	return pNode;
 }
 
+// Left rotation
+template <class T1, class T2>
+void RBTree<T1, T2>::LeftRotation(NodeType* pNode)
+{
+	if (pNode==nullptr)
+	{
+		return;
+	}
+
+	// Get right node at first
+	NodeType* pRightNode = pNode->pRight;
+
+	pNode->pRight = pRightNode->pLeft;
+
+	if (pRightNode->pLeft !=nullptr)
+	{
+		pRightNode->pLeft->pParent = pNode;
+	}
+
+	pRightNode->pParent = pNode->pParent;
+
+	if (pNode->pParent==nullptr)
+	{
+		SetRootNode(pRightNode);
+	}
+	else
+	{
+		if (pNode==pNode->pParent->pLeft)
+		{
+			pNode->pParent->pLeft = pRightNode;
+		}
+		else
+		{
+			pNode->pParent->pRight = pRightNode;
+		}
+	}
+
+	pRightNode->pLeft = pNode;
+
+	pNode->pParent = pRightNode;
+}
+
+// Right rotation
+template <class T1, class T2>
+void RBTree<T1, T2>::RightRotation(NodeType* pNode)
+{
+	if (pNode == nullptr)
+	{
+		return;
+	}
+
+	// Get left node at first
+	NodeType* pLeftNode = pNode->pLeft;
+
+	pNode->pLeft = pLeftNode->pRight;
+
+	if (pLeftNode->pRight!=nullptr)
+	{
+		pLeftNode->pRight->pParent = pNode;
+	}
+
+	pLeftNode->pParent = pNode->pParent;
+
+	if (pNode->pParent==nullptr)
+	{
+		SetRootNode(pLeftNode);
+	}
+	else
+	{
+		if (pNode==pNode->pParent->pLeft)
+		{
+			pNode->pParent->pLeft = pLeftNode;
+		}
+		else
+		{
+			pNode->pParent->pRight = pLeftNode;
+		}
+	}
+
+	pLeftNode->pRight = pNode;
+
+	pNode->pParent = pLeftNode;
+}
+
+// Insert fixup
+template <class T1, class T2>
+void RBTree<T1, T2>::InsertFixup(NodeType* pRoot, NodeType* pCurNode)
+{
+	if (pRoot==nullptr || pCurNode==nullptr)
+	{
+		return;
+	}
+
+	NodeType* pCurrentNode = pCurNode;
+
+	// If parent node's color is black and it is no need to fix tree
+	while (pCurrentNode->pParent->color==RED)
+	{
+		if (pCurrentNode == pCurrentNode->pParent->pLeft)
+		{
+			// Get uncle node
+			NodeType* pUncleNode = pCurrentNode->pParent->pRight;
+
+			// Uncle node's color is red and we can simply change their colors
+			if (pUncleNode->color==RED)
+			{
+				pCurrentNode->pParent->color = BLACK;
+
+				pCurrentNode->pParent->pParent->color = RED;
+
+				pUncleNode->color = BLACK;
+
+				pCurrentNode = pCurrentNode->pParent->pParent;
+			}
+			else 
+			{
+				// If we insert node to the parent's right and we need to left rotate it 
+				// to be like inserting node to the parent's left
+				if (pCurrentNode== pCurrentNode->pParent->pRight)
+				{
+					pCurrentNode = pCurrentNode->pParent;
+
+					LeftRotation(pCurrentNode);
+				}
+
+				// If we insert node to the parent's left
+				{
+					pCurrentNode = pCurrentNode->pParent->pParent;
+
+					RightRotation(pCurrentNode);
+
+					pCurrentNode->pParent->color = BLACK;
+
+					pCurrentNode->color = RED;
+				}
+			}
+		}
+		else
+		{
+			// Get uncle node
+			NodeType* pUncleNode = pCurrentNode->pParent->pLeft;
+
+			if (pUncleNode->color == RED)
+			{
+				pCurrentNode->pParent->color = BLACK;
+
+				pCurrentNode->pParent->pParent->color = RED;
+
+				pUncleNode->color = BLACK;
+
+				pCurrentNode = pCurrentNode->pParent->pParent;
+			}
+			else
+			{
+				if (pCurrentNode == pCurrentNode->pParent->pLeft)
+				{
+					pCurrentNode = pCurrentNode->pParent;
+
+					RightRotation(pCurrentNode);
+				}
+
+				pCurrentNode = pCurrentNode->pParent->pParent;
+
+				LeftRotation(pCurrentNode);
+
+				pCurrentNode->pParent->color = BLACK;
+
+				pCurrentNode->color = RED;
+			}
+		}
+	}
+
+	// Make root node's color to be black
+	pRoot->color = BLACK;
+}
+
 // Insert the key and value
 template <class T1, class T2>
 bool RBTree<T1, T2>::Insert(NodeType* pCurNode)
 {
+	if (pCurNode==nullptr)
+	{
+		return false;
+	}
 
+	NodeType* pNode = GetRootNode();
+
+	NodeType* pInsertNode = nullptr;
+
+	while (pNode!=nullptr)
+	{
+		pInsertNode = pNode;
+
+		if (pCurNode->key<pNode->key)
+		{
+			pNode = pNode->pLeft;
+		}
+		else
+		{
+			pNode = pNode->pRight;
+		}
+	}
+
+	if (pNode==nullptr)
+	{
+		SetRootNode(pCurNode);
+	}
+	else
+	{
+		if (pCurNode->key < pInsertNode->key)
+		{
+			pInsertNode->pLeft = pCurNode;
+		}
+		else
+		{
+			pInsertNode->pRight = pCurNode;
+		}
+
+		pCurNode->pParent = pInsertNode;
+	}
+
+	pCurNode->color = RED;
+
+	return true;
 }
 
 // Insert the key and value
@@ -353,20 +586,22 @@ bool RBTree<T1, T2>::Insert(KeyType& key, ValueType& value)
 		return false;
 	}
 
+	// Search the key to know wether we can insert it
+	NodeType* pSearchNode = Search(key);
+	if (pSearchNode != nullptr)
+	{
+		return false;
+	}
+
 	// Insert the data to the tree
 	Insert(pNode);
 
 	// Fix the tree to be balanced
 	InsertFixup(GetRootNode(),pNode);
 
+	SetSize(GetSize()+1);
+
 	return true;
-}
-
-// Search the key
-template <class T1, class T2>
-RBTree<T1, T2>::NodeType* RBTree<T1, T2>::Search(KeyType& key)
-{
-
 }
 
 // Get prodromal node(in-order: left max node)
@@ -441,6 +676,46 @@ void RBTree<T1, T2>::EnterDeleteMode1(NodeType*& pRoot, NodeType*& pNode)
 	{
 		return;
 	}
+
+	// Find successor node at first
+	NodeType* pSuccessorNode = GetSuccessor(pRoot);
+
+	// Get successor's child (Successor has one child at most and it is right node)
+	NodeType* pSuccessorChildNode = pSuccessorNode->pRight;
+
+	// Change successor's child's parent (on another way ,this successor node is deleted. But remember it is still there)
+	NodeType* pSuccessorParentNode = pSuccessorNode->pParent;
+
+	if (pSuccessorParentNode==pNode)
+	{
+		pSuccessorParentNode = pSuccessorNode;
+	}
+	else
+	{
+		pSuccessorParentNode->pLeft = pSuccessorChildNode;
+
+		if (pSuccessorChildNode!=nullptr)
+		{
+			pSuccessorChildNode->pParent = pSuccessorParentNode;
+		}
+
+		pSuccessorNode->pRight = pNode->pRight;
+
+		pNode->pRight->pParent = pSuccessorNode;
+	}
+
+	// Make successor node to replace current deleted node
+	pSuccessorParentNode = pNode->pParent;
+
+	pSuccessorNode->color = pNode->color;
+
+	pSuccessorNode->key = pNode->key;
+
+	pSuccessorNode->value = pNode->value;
+
+	pSuccessorNode->pLeft = pNode->pLeft;
+
+	pNode->pLeft->pParent = pSuccessorNode;
 
 	// If the node's color is red, it is no need to fixup the tree
 	if (pNode->color == BLACK)
@@ -522,6 +797,13 @@ void RBTree<T1, T2>::EnterDeleteMode3(NodeType*& pRoot, NodeType*& pNode)
 	DeleteNode(pNode);
 }
 
+// Remove fixup
+template <class T1, class T2>
+void RBTree<T1, T2>::RemoveFixup(NodeType* pRoot, NodeType* pCurNode)
+{
+
+}
+
 // Remove the node
 template <class T1, class T2>
 void RBTree<T1, T2>::Remove(NodeType* pNode)
@@ -558,29 +840,84 @@ void RBTree<T1, T2>::Remove(KeyType& key)
 {
 	// Search the node with key
 	NodeType* pNode = Search(key);
-
-	// Remove the node
-	if (!Remove(pNode))
+	if (pNode==nullptr)
 	{
 		return;
 	}
 
-	// Fix the tree to be balanced again
-	RemoveFixup(GetRootNode(), pNode);
+	// Remove the node
+	Remove(pNode);
+
+	SetSize(GetSize() - 1);
 }
 
 // Search the key
 template <class T1, class T2>
 bool RBTree<T1, T2>::Search(KeyType& key, ValueType& value)
 {
+	NodeType* pNode = Search(key);
+	if (pNode==nullptr)
+	{
+		return false;
+	}
 
+	value = pNode->value;
+
+	return true;
+}
+
+// Search the key
+template <class T1, class T2>
+RBTree<T1, T2>::NodeType* RBTree<T1, T2>::Search(KeyType& key)
+{
+	NodeType* pNode = GetRootNode();
+
+	while (pNode != nullptr)
+	{
+		if (key == pNode->key)
+		{
+			break;
+		}
+		else if (key < pNode->key)
+		{
+			pNode = pNode->pLeft;
+		}
+		else
+		{
+			pNode = pNode->pRight;
+		}
+	}
+
+	return pNode;
 }
 
 // Modify the key's data
 template <class T1, class T2>
 bool RBTree<T1, T2>::Modify(KeyType& key, ValueType& value)
 {
+	NodeType* pNode = Search(key);
+	if (pNode==nullptr)
+	{
+		return false;
+	}
 
+	pNode->value = value;
+
+	return true;
+}
+
+// Size of the tree
+template <class T1, class T2>
+int RBTree<T1, T2>::Size()
+{
+	return GetSize();
+}
+
+// Is empty
+template <class T1, class T2>
+bool RBTree<T1, T2>::IsEmpty()
+{
+	return GetRootNode() == nullptr;
 }
 
 // Get the error message
