@@ -116,7 +116,25 @@ private:
 	NodeType* Search(KeyType& key);
 
 	// Remove the node
-	bool Remove(NodeType* pNode);
+	void Remove(NodeType* pNode);
+
+	// Get prodromal node
+	NodeType* GetProdromal(NodeType* pCurNode);
+
+	// Get successor node
+	NodeType* GetSuccessor(NodeType* pCurNode);
+
+	// Delete node
+	void DeleteNode(NodeType*& pNode);
+
+	// Enter delete mode1: current node has two child
+	void EnterDeleteMode1(NodeType*& pRoot,NodeType*& pNode);
+
+	// Enter delete mode2: current node has only one child
+	void EnterDeleteMode2(NodeType*& pRoot, NodeType*& pNode);
+
+	// Enter delete mode3: current node has no any child
+	void EnterDeleteMode3(NodeType*& pRoot, NodeType*& pNode);
 
 private:
 	// Get the disposed status
@@ -351,16 +369,187 @@ RBTree<T1, T2>::NodeType* RBTree<T1, T2>::Search(KeyType& key)
 
 }
 
+// Get prodromal node(in-order: left max node)
+template <class T1, class T2>
+RBTree<T1, T2>::NodeType* RBTree<T1, T2>::GetProdromal(NodeType* pCurNode)
+{
+	if (pCurNode==nullptr)
+	{
+		return nullptr;
+	}
+
+	if (pCurNode->pLeft!=nullptr)
+	{
+		return GetMaxNode(pCurNode->pLeft);
+	}
+
+	NodeType* pParent = pCurNode->pParent;
+
+	while (pParent !=nullptr && (pCurNode== pParent->pLeft))
+	{
+		pCurNode = pParent;
+
+		pParent = pCurNode->pParent;
+	}
+
+	return pParent;
+}
+
+// Get successor node(in-order: right min node)
+template <class T1, class T2>
+RBTree<T1, T2>::NodeType* RBTree<T1, T2>::GetSuccessor(NodeType* pCurNode)
+{
+	if (pCurNode == nullptr)
+	{
+		return nullptr;
+	}
+
+	if (pCurNode->pRight != nullptr)
+	{
+		return GetMinNode(pCurNode->pRight);
+	}
+
+	NodeType* pParent = pCurNode->pParent;
+
+	while (pParent != nullptr && (pCurNode == pParent->pRight))
+	{
+		pCurNode = pParent;
+
+		pParent = pCurNode->pParent;
+	}
+
+	return pParent;
+}
+
+// Delete node
+template <class T1, class T2>
+void RBTree<T1, T2>::DeleteNode(NodeType*& pNode)
+{
+	if (pNode!=nullptr)
+	{
+		delete pNode;
+
+		pNode = nullptr;
+	}
+}
+
+// Enter delete mode1: current node has two child
+template <class T1, class T2>
+void RBTree<T1, T2>::EnterDeleteMode1(NodeType*& pRoot, NodeType*& pNode)
+{
+	if (pRoot == nullptr || pNode == nullptr)
+	{
+		return;
+	}
+
+	// If the node's color is red, it is no need to fixup the tree
+	if (pNode->color == BLACK)
+	{
+		RemoveFixup(pRoot, pNode);
+	}
+
+	// Delete the node
+	DeleteNode(pNode);
+}
+
+// Enter delete mode2: current node has only one child
+template <class T1, class T2>
+void RBTree<T1, T2>::EnterDeleteMode2(NodeType*& pRoot, NodeType*& pNode)
+{
+	if (pRoot==nullptr || pNode==nullptr)
+	{
+		return;
+	}
+
+	// Get current node's child
+	NodeType* pChild = nullptr;
+
+	if (pNode->pLeft != nullptr)
+	{
+		pChild = pNode->pLeft;
+	}
+	else
+	{
+		pChild = pNode->pRight;
+	}
+
+	// Get current node's parent
+	NodeType* pParent = pRoot;
+
+	if (pNode->pParent != nullptr)
+	{
+		pParent = pNode->pParent;
+	}
+
+	// Change this child's parent
+	pChild->pParent = pParent;
+
+	if (pNode == pParent->pLeft)
+	{
+		pParent->pLeft = pChild;
+	}
+	else
+	{
+		pParent->pRight = pChild;
+	}
+
+	// If the node's color is red, it is no need to fixup the tree
+	if (pNode->color == BLACK)
+	{
+		RemoveFixup(pRoot, pNode);
+	}
+
+	// Delete the node
+	DeleteNode(pNode);
+}
+
+// Enter delete mode3: current node has no any child
+template <class T1, class T2>
+void RBTree<T1, T2>::EnterDeleteMode3(NodeType*& pRoot, NodeType*& pNode)
+{
+	if (pRoot == nullptr || pNode == nullptr)
+	{
+		return;
+	}
+
+	// If the node's color is red, it is no need to fixup the tree
+	if (pNode->color == BLACK)
+	{
+		RemoveFixup(pRoot, pNode);
+	}
+
+	// Delete the node
+	DeleteNode(pNode);
+}
+
 // Remove the node
 template <class T1, class T2>
-bool RBTree<T1, T2>::Remove(NodeType* pNode)
+void RBTree<T1, T2>::Remove(NodeType* pNode)
 {
 	if (pNode==nullptr)
 	{
-		return false;
+		return;
 	}
 
-	return true;
+	NodeType* pRoot = GetRootNode();
+
+	// Deleted node has two children
+	if (pNode->pLeft!=nullptr && pNode->pRight!=nullptr)
+	{
+		EnterDeleteMode1(pRoot, pNode);
+
+		return;
+	}
+
+	// Deleted node has one child
+	if (pNode->pLeft!=nullptr || pNode->pRight!=nullptr)
+	{
+		EnterDeleteMode2(pRoot, pNode);
+	}
+	else // Deleted node has no child
+	{
+		EnterDeleteMode3(pRoot, pNode);
+	}
 }
 
 // Remove the key
